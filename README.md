@@ -21,14 +21,17 @@ The server covers the Qualcomm AI Hub Core API with 57 tools. You can:
 - Run inference on hosted devices and read performance profiles.
 - Download compiled models, outputs, and logs.
 
-Here is a real run through this server, using a tiny one-layer test model:
+Here is a real run of that prompt with MobileNetV2, a 14 MB ONNX model:
 
 ```text
-Device     Samsung Galaxy S24 (Family), Android 14
+Device     Samsung Galaxy S24, Android 14
 Compile    ONNX to TFLite: SUCCESS
-Inference  SUCCESS, output shape [1, 1, 32, 32]
-Profile    Downloaded with the output data and device log
+Inference  0.372 ms estimated, on generated input data
+Compute    NPU for all 70 layers
+Memory     About 172 MB at peak
 ```
+
+This measures speed only. It excludes model loading and any preprocessing in an app.
 
 ## Quick start
 
@@ -136,6 +139,8 @@ install it from GitHub.
 - Cancelling a call does not cancel the remote job. After a connection failure, check
   existing jobs before resubmitting.
 - Set a `timeout` on long waits.
+- Models with dynamic input shapes need fixed ones. Pass `input_specs` when compiling,
+  such as `{"input":[1,3,224,224]}`.
 - Inline data is limited to 16 MiB. Use HDF5 files for larger datasets.
 - `submit_profile_job` and `submit_compile_and_profile_jobs` are deprecated by the SDK.
   Use `submit_inference_job`.

@@ -23,6 +23,11 @@ HDF5 file or an inline dataset. Submission tools can use existing IDs. Saved mod
 replace framework-specific Python objects, so uploading needs no PyTorch, ONNX, or Core
 ML runtime.
 
+## Dynamic input shapes
+
+Compile jobs fail with a job status message when a model has dynamic input shapes. Set
+fixed shapes with `input_specs`, such as `{"input":[1,3,224,224]}`.
+
 ## Inline datasets
 
 Inline datasets keep feature order explicit:

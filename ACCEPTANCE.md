@@ -49,6 +49,7 @@ account, `Samsung Galaxy S24 (Family)`, and a tiny generated test model. 53 of t
 | Sharing | Add, read back and remove on a model; `model_disable_sharing` with nothing shared. |
 | Project and job changes | `create_project` and `job_set_name`. |
 | Refusals | Overwrite and wrong job type were rejected with structured errors. |
+| Real model | Claude Code ran the README's sample prompt with MobileNetV2 (14 MB) on the release code and protobuf 5.29.6. A dynamic-shape compile failed, the assistant retried with fixed shapes, and inference succeeded: 372 µs estimated over 100 runs, all 70 layers on the NPU. Figures were confirmed from the Qualcomm account. |
 
 Live testing found one bug that the mocked suite missed: the `get_sharing` tools
 failed because the SDK returns a protobuf container, not a list. It is fixed and has
@@ -56,7 +57,8 @@ a regression test using a real protobuf object.
 
 After the final security changes, the read-only live check, sharing reads and ID
 lookups were repeated and passed, including with protobuf 5.29.6. The job flows above
-ran with protobuf 6.31.1 and were not repeated.
+ran with protobuf 6.31.1. Only compile and inference were repeated with 5.29.6, in the
+real-model run.
 
 ## Not run
 
@@ -67,8 +69,6 @@ ran with protobuf 6.31.1 and were not repeated.
 - Multi-graph links, multi-device submissions, and models larger than the test model.
 - Live Qualcomm calls from Linux or Windows. Live testing ran only on macOS.
 - An independent security review. Reviews so far were done by the implementer.
-- A real model of meaningful size, or the README's sample prompt as one assistant
-  request.
 
 The connector pins its SDK versions. Python-only model objects are represented by
 saved files/IDs; optional target-model downloads return a saved file path. Archives
