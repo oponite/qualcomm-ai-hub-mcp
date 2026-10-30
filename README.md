@@ -224,7 +224,7 @@ Tests mock the official SDK. They cover each registered operation, schemas,
 conversions, credentials, file security, downloads, real stdio subprocesses,
 legacy protocol negotiation, errors, noisy SDK output, and concurrent polling.
 The package check builds a wheel/sdist and tests both entry points in a clean venv.
-CI is configured for Python 3.11 on Linux, macOS, and Windows.
+CI is configured for Python 3.11, 3.12, and 3.13 on Linux, macOS, and Windows.
 
 To opt into a read-only live Qualcomm check, configure credentials and set
 `QAI_HUB_MCP_LIVE=1` before running `python -m pytest tests/test_live.py -q`.

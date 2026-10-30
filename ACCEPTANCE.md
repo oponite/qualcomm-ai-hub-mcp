@@ -57,8 +57,8 @@ lookups were repeated and passed. The job flows above were not repeated.
 - Loading the quantized ONNX, QNN DLC or QNN context binary outputs. Only the compiled
   TFLite model was executed on a device.
 - Multi-graph links, multi-device submissions, and models larger than the test model.
-- Linux and Windows runners: the Python 3.11 CI matrix is configured but has not
-  run yet.
+- Linux and Windows runners: the CI matrix is configured but has not run yet. The
+  source suite also passed locally on macOS with Python 3.12 and 3.13.
 
 The connector pins its SDK versions. Python-only model objects are represented by
 saved files/IDs; optional target-model downloads return a saved file path. Archives

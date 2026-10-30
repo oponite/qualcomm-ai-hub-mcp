@@ -4,12 +4,14 @@ Report security problems through [SECURITY.md](SECURITY.md), not public issues.
 
 ## Setup
 
-Use Python 3.11 or newer:
+Use Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). `uv.lock` pins the
+development and CI environment:
 
 ```sh
-python -m venv .venv
-.venv/bin/python -m pip install -e ".[test]"
+uv sync --extra test
 ```
+
+After changing dependencies, run `uv lock` and commit the result.
 
 ## Checks
 
@@ -39,6 +41,9 @@ pinned SDK. When you add or rename an operation, also update:
 2. `parameter_type()`, for any parameter that is not a plain scalar.
 3. `encode()`, for any new SDK result type.
 4. `DOWNLOAD_METHODS`, if the operation writes files.
+
+The weekly `SDK drift` workflow runs these tests against the latest `qai-hub` and
+`mcp`. If it fails, update the registry and the pins together.
 
 Any new ID input must use `RemoteId`, and any new local path must go through
 `config.path()`.

@@ -6,10 +6,10 @@ Python 3.11+ MCP stdio server wrapping the Qualcomm AI Hub Core API. `qai-hub==0
 
 ## Commands
 
-`.venv` is a uv-managed editable install with the test extras, and has no `pip`. `ruff` is not a project dependency; run it through `uvx`. Its rules are set in `pyproject.toml`.
+`.venv` is a uv-managed editable install with the test extras, and has no `pip`. Run `uv lock` after changing dependencies. `ruff` is not a project dependency; run it through `uvx`. Its rules are set in `pyproject.toml`.
 
 ```sh
-uv pip install --python .venv/bin/python -e ".[test]"   # (re)install
+uv sync --extra test                              # (re)install from uv.lock
 .venv/bin/python -m pytest -q                     # full suite; 253 pass, 1 skipped (live)
 .venv/bin/python -m pytest tests/test_security.py -q
 .venv/bin/python -m pytest "tests/test_contracts.py::test_each_operation_forwards_typed_parameters[get_devices]" -q
@@ -19,7 +19,7 @@ uvx ruff@0.17.3 check . && uvx ruff@0.17.3 format --check .
 
 Live check (read-only, needs credentials): `QAI_HUB_MCP_LIVE=1 .venv/bin/python -m pytest tests/test_live.py -q`. Everything else mocks the SDK.
 
-CI (`.github/workflows/test.yml`) runs pytest and `package_acceptance.py` on Python 3.11 across Linux, macOS and Windows. CI has not run yet; see `ACCEPTANCE.md` for what has and has not been verified.
+CI (`.github/workflows/test.yml`) runs ruff, gitleaks, pytest with coverage, and `package_acceptance.py` on Python 3.11 to 3.13 across Linux, macOS and Windows. Actions are pinned to commit SHAs. `sdk-drift.yml` runs weekly against the latest `qai-hub` and `mcp`. CI has not run yet; see `ACCEPTANCE.md` for what has and has not been verified.
 
 ## Architecture
 
