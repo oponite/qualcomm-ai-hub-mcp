@@ -49,7 +49,7 @@ You need [uv](https://docs.astral.sh/uv/) and a
 3. Add the server to your client. For Claude Code:
 
    ```sh
-   claude mcp add qualcomm -- uvx qualcomm-ai-hub-mcp --workspace /absolute/path/to/folder
+   claude mcp add qualcomm -- uvx --from git+https://github.com/oponite/qualcomm-ai-hub-mcp qualcomm-ai-hub-mcp --workspace /absolute/path/to/folder
    ```
 
    See [Other clients](#other-clients) for VS Code and others.
@@ -79,7 +79,8 @@ Qualcomm SDK, which has its own behavior and terms.
 ## Other clients
 
 The server runs locally over stdio. It is not an HTTP endpoint. If your client cannot
-find `uvx`, use its absolute path.
+find `uvx`, use its absolute path. This project is not on PyPI yet, so these commands
+install it from GitHub.
 
 **VS Code:** add this to `.vscode/mcp.json`:
 
@@ -89,7 +90,10 @@ find `uvx`, use its absolute path.
     "qualcomm": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["qualcomm-ai-hub-mcp", "--workspace", "/absolute/path/to/folder"]
+      "args": [
+        "--from", "git+https://github.com/oponite/qualcomm-ai-hub-mcp",
+        "qualcomm-ai-hub-mcp", "--workspace", "/absolute/path/to/folder"
+      ]
     }
   }
 }
@@ -102,7 +106,10 @@ find `uvx`, use its absolute path.
   "mcpServers": {
     "qualcomm": {
       "command": "uvx",
-      "args": ["qualcomm-ai-hub-mcp", "--workspace", "/absolute/path/to/folder"]
+      "args": [
+        "--from", "git+https://github.com/oponite/qualcomm-ai-hub-mcp",
+        "qualcomm-ai-hub-mcp", "--workspace", "/absolute/path/to/folder"
+      ]
     }
   }
 }

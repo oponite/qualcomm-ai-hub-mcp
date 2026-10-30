@@ -66,6 +66,9 @@ ran with protobuf 6.31.1 and were not repeated.
   TFLite model was executed on a device.
 - Multi-graph links, multi-device submissions, and models larger than the test model.
 - Live Qualcomm calls from Linux or Windows. Live testing ran only on macOS.
+- An independent security review. Reviews so far were done by the implementer.
+- A real model of meaningful size, or the README's sample prompt as one assistant
+  request.
 
 The connector pins its SDK versions. Python-only model objects are represented by
 saved files/IDs; optional target-model downloads return a saved file path. Archives

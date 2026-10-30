@@ -37,7 +37,7 @@ Tool names: client methods keep their name; object methods become `{prefix}_{met
 
 - **Sensitive operations** are derived in `Operation.sensitive`: any `submit_*`, `upload_*`, `create_*`, plus `modify_sharing`, `disable_sharing`, `set_name`. They get a `confirm` parameter, and only the literal `True` passes. Rejection happens before any SDK access.
 - **No retries or queues.** The connector adds no submission retries. For sensitive calls, `error_result` forces `retryable=False` on ambiguous failures (timeout, network, 5xx, internal) because the remote change may have completed.
-- **Every ID that reaches a URL must use `RemoteId`.** The SDK joins IDs into request URLs unescaped, and a value like `//host` redirects the request and its API token. `test_every_url_bound_input_has_the_id_pattern` enforces this for `*_id` and `project` inputs.
+- **Every ID input must use `RemoteId`.** IDs are checked against a strict character set before they reach the SDK. `test_every_id_input_has_the_id_pattern` enforces this for `*_id` and `project` inputs.
 - **Worker calls use `abandon_on_cancel=True`** so cancelled waits free their slot and polling keeps working. Abandoned calls can still complete remotely.
 - **Discovery must work without credentials.** Client creation is lazy; `config.client()` only loads local configuration. `QAI_HUB_API_TOKEN` and `--profile` are mutually exclusive.
 - **All local paths go through `config.path()`.** It enforces the workspace root and refuses protected names (`.ssh`, `.qai_hub`, `.env*`, credential files). With `output=True` it refuses existing targets. Input model files also pass `validate_model_archive`, and HDF5 inputs pass `validate_hdf5`.

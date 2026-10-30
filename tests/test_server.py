@@ -77,9 +77,7 @@ def test_nullable_and_defaults():
     anyio.run(check)
 
 
-@pytest.mark.parametrize(
-    "bad", ["//evil.example/x", "../../users", "a/b", "a?b", "a#b", "a b", "a\n"]
-)
+@pytest.mark.parametrize("bad", ["/x", "../x", "a/b", "a?b", "a#b", "a b", "a\n"])
 @pytest.mark.parametrize(
     ("tool", "arguments"),
     [
@@ -108,7 +106,7 @@ def test_nullable_and_defaults():
         ),
     ],
 )
-def test_url_unsafe_ids_never_reach_sdk(tool, arguments, bad):
+def test_malformed_ids_never_reach_sdk(tool, arguments, bad):
     class Refuse:
         def __getattr__(self, name):
             raise AssertionError(f"SDK reached: {name}")
@@ -122,7 +120,7 @@ def test_url_unsafe_ids_never_reach_sdk(tool, arguments, bad):
     anyio.run(check)
 
 
-def test_every_url_bound_input_has_the_id_pattern():
+def test_every_id_input_has_the_id_pattern():
     async def check():
         async with Client(create_server(sdk=SDK())) as client:
             tools = (await client.list_tools()).tools

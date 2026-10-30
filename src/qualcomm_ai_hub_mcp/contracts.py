@@ -37,7 +37,7 @@ DTYPES = (
 )
 
 
-# The SDK joins IDs into request URLs unescaped: "//host" would send the API token there.
+# Qualcomm IDs use a fixed character set; anything else is rejected before the SDK.
 REMOTE_ID = r"^[A-Za-z0-9_-]+$"
 RemoteId = Annotated[str, Field(min_length=1, pattern=REMOTE_ID)]
 
