@@ -49,7 +49,7 @@ account, `Samsung Galaxy S24 (Family)`, and a tiny generated test model. 53 of t
 | Sharing | Add, read back and remove on a model; `model_disable_sharing` with nothing shared. |
 | Project and job changes | `create_project` and `job_set_name`. |
 | Refusals | Overwrite and wrong job type were rejected with structured errors. |
-| Real model | Claude Code ran the README's sample prompt with MobileNetV2 (14 MB) on the release code and protobuf 5.29.6. A dynamic-shape compile failed, the assistant retried with fixed shapes, and inference succeeded: 372 µs estimated over 100 runs, all 70 layers on the NPU. Figures were confirmed from the Qualcomm account. |
+| Real model | Claude Code ran the README's sample prompt with MobileNetV2 (14 MB) on the release code and protobuf 5.29.6. A dynamic-shape compile failed, the assistant retried with fixed shapes, and inference succeeded: 372 µs estimated over 100 runs, all 70 layers on the NPU. Figures were confirmed from the Qualcomm account. The tester saw Claude Code approval prompts for the calls. |
 
 Live testing found one bug that the mocked suite missed: the `get_sharing` tools
 failed because the SDK returns a protobuf container, not a list. It is fixed and has

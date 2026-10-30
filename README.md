@@ -71,6 +71,8 @@ for these tools, and do not auto-approve them:
 - `create_project` and `job_set_name`
 - `*_modify_sharing` and `*_disable_sharing`
 
+Auto-approve modes can skip these prompts, so check your client's permission mode first.
+
 **Your models and data leave your machine.** Uploads and submissions send them to
 Qualcomm, where they are stored and processed under your account. Review Qualcomm's
 terms and pricing first. This server does not track usage or cost.
