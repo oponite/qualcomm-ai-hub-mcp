@@ -27,6 +27,12 @@ was not modified. The extension-host test exited after completion.
 responses. This verifies the VS Code MCP host boundary, not a model-driven Copilot
 conversation or successful live Qualcomm execution.
 
+## Continuous integration
+
+GitHub Actions passed on Ubuntu, macOS and Windows with Python 3.11, 3.12 and 3.13.
+Each of the 9 jobs ran 253 passing tests with one optional live test skipped, plus the
+package check. Lint and the secret scan also passed. These jobs use the mocked SDK.
+
 ## Live Qualcomm API
 
 Verified on 2026-10-30 from macOS through the MCP tools, using a real Qualcomm
@@ -57,8 +63,7 @@ lookups were repeated and passed. The job flows above were not repeated.
 - Loading the quantized ONNX, QNN DLC or QNN context binary outputs. Only the compiled
   TFLite model was executed on a device.
 - Multi-graph links, multi-device submissions, and models larger than the test model.
-- Linux and Windows runners: the CI matrix is configured but has not run yet. The
-  source suite also passed locally on macOS with Python 3.12 and 3.13.
+- Live Qualcomm calls from Linux or Windows. Live testing ran only on macOS.
 
 The connector pins its SDK versions. Python-only model objects are represented by
 saved files/IDs; optional target-model downloads return a saved file path. Archives

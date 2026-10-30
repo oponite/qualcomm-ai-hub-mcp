@@ -19,7 +19,7 @@ uvx ruff@0.17.3 check . && uvx ruff@0.17.3 format --check .
 
 Live check (read-only, needs credentials): `QAI_HUB_MCP_LIVE=1 .venv/bin/python -m pytest tests/test_live.py -q`. Everything else mocks the SDK.
 
-CI (`.github/workflows/test.yml`) runs ruff, gitleaks, pytest with coverage, and `package_acceptance.py` on Python 3.11 to 3.13 across Linux, macOS and Windows. Actions are pinned to commit SHAs. `sdk-drift.yml` runs weekly against the latest `qai-hub` and `mcp`. CI has not run yet; see `ACCEPTANCE.md` for what has and has not been verified.
+CI (`.github/workflows/test.yml`) runs ruff, gitleaks, pytest with coverage, and `package_acceptance.py` on Python 3.11 to 3.13 across Linux, macOS and Windows. Actions are pinned to commit SHAs. `sdk-drift.yml` runs weekly against the latest `qai-hub` and `mcp`. See `ACCEPTANCE.md` for what has and has not been verified.
 
 ## Architecture
 
