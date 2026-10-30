@@ -1,0 +1,16 @@
+{
+  "vscode": "1.144.0",
+  "state": "passed",
+  "offline": [
+    "{\"result\":[{\"name\":\"Offline Test Device\",\"os\":\"test\",\"attributes\":[\"offline:true\"]}]}"
+  ],
+  "authentication": [
+    "{\"error\":{\"code\":\"AUTHENTICATION\",\"message\":\"QAI_HUB_API_TOKEN is empty.\",\"retryable\":false}}"
+  ],
+  "authorization": [
+    "{\"error\":{\"code\":\"AUTHORIZATION_REQUIRED\",\"message\":\"Explicit confirm=true is required before this operation.\",\"retryable\":false}}"
+  ],
+  "server_count": 2,
+  "tools_per_server": 57,
+  "environment": "Isolated VS Code user-data/extensions directories and temporary workspace; offline SDK fixture plus real server with deliberately empty token."
+}

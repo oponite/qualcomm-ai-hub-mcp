@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "qualcomm-ai-hub-mcp"
+version = "0.1.0"
+description = "Unofficial MCP stdio server for the Qualcomm AI Hub Core API"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Vijay Neelakantan" }]
+keywords = ["mcp", "model-context-protocol", "qualcomm", "ai-hub", "on-device-ai"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.11"
+dependencies = [
+  "mcp==2.3.0", "qai-hub==0.57.0", "anyio>=4.9,<5",
+  "pydantic>=2.12,<3", "numpy>=1.24,<3", "h5py>=3.8,<4",
+  "requests>=2.28,<3",
+  # qai-hub caps protobuf at 6.31.1; 5.29.6 is the newest line with the CVE-2026-0994 fix.
+  "protobuf>=5.29.6,<6",
+]
+[project.urls]
+Homepage = "https://github.com/oponite/qualcomm-ai-hub-mcp"
+Issues = "https://github.com/oponite/qualcomm-ai-hub-mcp/issues"
+Changelog = "https://github.com/oponite/qualcomm-ai-hub-mcp/blob/main/CHANGELOG.md"
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "pytest-cov>=5,<8", "build>=1,<2"]
+[project.scripts]
+qualcomm-ai-hub-mcp = "qualcomm_ai_hub_mcp.server:main"
+[tool.setuptools.packages.find]
+where = ["src"]
+[tool.ruff]
+target-version = "py311"
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "C4", "BLE", "RET", "PLW", "PLR1711"]
