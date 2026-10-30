@@ -16,6 +16,7 @@ Verified locally on 2026-10-30: macOS arm64, Python 3.11.16,
 | Current MCP | Official client negotiates 2026-07-28 and successfully invokes tools. |
 | Packaging | Wheel and sdist built; wheel installed into a fresh venv; pip check and both installed entry points pass MCP discovery and confirmation rejection. |
 | VS Code host | Actual VS Code extension-host API starts servers from workspace mcp.json, discovers 57 tools per instance, invokes a successful offline tool and receives authentication/authorization failures. |
+| Claude Code host | Claude Code 2.1.314 started the server from an MCP config and returned live `get_devices` data. Confirmed on macOS with a read-only call. |
 
 VS Code acceptance used temporary, isolated user-data/extensions directories and a
 fresh test workspace. One server used the offline SDK fixture; the other used the
