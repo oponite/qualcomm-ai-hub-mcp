@@ -54,7 +54,8 @@ failed because the SDK returns a protobuf container, not a list. It is fixed and
 a regression test using a real protobuf object.
 
 After the final security changes, the read-only live check, sharing reads and ID
-lookups were repeated and passed. The job flows above were not repeated.
+lookups were repeated and passed, including with protobuf 5.29.6. The job flows above
+ran with protobuf 6.31.1 and were not repeated.
 
 ## Not run
 
