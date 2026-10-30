@@ -1,0 +1,5 @@
+include README.md ACCEPTANCE.md CHANGELOG.md CONTRIBUTING.md SECURITY.md
+include .github/workflows/test.yml
+recursive-include docs *.md *.json
+recursive-include tests *.py
+exclude WORK_LOG.md
