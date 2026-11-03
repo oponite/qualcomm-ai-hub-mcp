@@ -3,6 +3,10 @@
 This project follows [Semantic Versioning](https://semver.org/). Breaking changes can
 occur in `0.x` minor releases.
 
+## Unreleased
+
+- Document how exported Qualcomm AI Hub Models can be used through the connector.
+
 ## 0.1.0 - 2026-10-30
 
 ### Added

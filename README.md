@@ -3,6 +3,9 @@
 Compile, profile, and run AI models on real phones and other devices hosted by
 Qualcomm AI Hub, directly from your MCP client.
 
+Use models exported from [Qualcomm AI Hub Models](https://github.com/qualcomm/ai-hub-models)
+with your MCP assistant to compile, profile, and run inference on hosted Qualcomm devices.
+
 **Unofficial and in beta.** This independent project is not affiliated with, endorsed
 by, or supported by Qualcomm.
 
