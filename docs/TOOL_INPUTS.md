@@ -74,9 +74,10 @@ server adds no submission retries or task queue.
 Cancelling a call does not cancel a remote job, and a started SDK call may finish in the
 background. After a connection failure, check existing jobs before resubmitting.
 
-Set a `timeout` on long waits. A client that stops waiting without sending an MCP
-cancellation keeps a worker thread busy until the SDK call returns, and 40 busy threads
-block further tool calls.
+Set a `timeout` on long waits. Each server allows 39 ordinary SDK tool executions
+and one separate `job_get_status` execution. Cancelled work keeps its slot until the
+SDK call finishes. Excess calls return `SERVER_BUSY` with `retryable=true`, before
+accessing the SDK. Status polling remains available when ordinary capacity is full.
 
 ## Results and errors
 

@@ -1,4 +1,4 @@
-"""Guard SDK transfers before writes, using its signed-URL APIs and transfer helper.
+"""Guard transfers before writes, using SDK signed URLs or scoped S3 credentials.
 
 No archive extraction or Python model deserialization is performed here.
 """
@@ -32,6 +32,28 @@ DOWNLOAD_METHODS = {
 }
 
 
+def _download_url(url, destination):
+    def attempt():
+        with api_utils.create_external_session(internal_retries=False) as session:
+            with session.get(url, stream=True, allow_redirects=False) as response:
+                if 300 <= response.status_code < 400:
+                    raise ConnectorError(
+                        "UNSAFE_URL", "Artifact download redirects are unsupported."
+                    )
+                if 200 <= response.status_code < 300:
+                    with destination.open("wb") as output:
+                        for block in response.iter_content(1024):
+                            output.write(block)
+                return response
+
+    response = api_utils.retry_call_with_backoff(attempt)
+    if not 200 <= response.status_code < 300:
+        raise api.APIException(
+            "Artifact download failed.", status_code=response.status_code
+        )
+    return destination
+
+
 class Downloads:
     def __init__(self, root, client, forbidden=()):
         self.root, self.client, self.forbidden = root, client, forbidden
@@ -57,9 +79,7 @@ class Downloads:
                     "UNSAFE_URL",
                     "Artifact download requires an HTTPS URL without embedded credentials.",
                 )
-            result = api_utils.download_file(
-                info.url, filename, str(destination), False
-            )
+            result = _download_url(info.url, destination)
         if Path(result).resolve() != destination.resolve() or not destination.is_file():
             raise ConnectorError(
                 "UNSAFE_PATH", "SDK transfer returned an unexpected output path."

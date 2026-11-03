@@ -33,6 +33,65 @@ def test_protocol():
     anyio.run(check)
 
 
+def test_full_capacity_rejects_calls_without_cancellation(monkeypatch):
+    from qualcomm_ai_hub_mcp.adapter import Adapter
+
+    release = threading.Event()
+    lock = threading.Lock()
+    active = 0
+    entered = 0
+    peak = 0
+
+    def invoke(self, op, arguments):
+        nonlocal active, entered, peak
+        with lock:
+            active += 1
+            entered += 1
+            peak = max(peak, active)
+        try:
+            assert release.wait(10)
+            return []
+        finally:
+            with lock:
+                active -= 1
+
+    monkeypatch.setattr(Adapter, "invoke", invoke)
+
+    async def check():
+        async with Client(create_server(sdk=SDK())) as client:
+
+            async def held_call(name, arguments):
+                assert not (await client.call_tool(name, arguments)).is_error
+
+            async with anyio.create_task_group() as tasks:
+                try:
+                    for _ in range(39):
+                        tasks.start_soon(held_call, "get_devices", {})
+                    tasks.start_soon(held_call, "job_get_status", {"job_id": "j"})
+                    with anyio.fail_after(5):
+                        while active != 40:
+                            await anyio.sleep(0.01)
+                    for name, arguments in (
+                        ("get_devices", {}),
+                        ("job_get_status", {"job_id": "j"}),
+                        ("create_project", {"name": "x", "confirm": True}),
+                    ):
+                        with anyio.fail_after(2):
+                            result = await client.call_tool(name, arguments)
+                        assert result.is_error
+                        error = result.structured_content["error"]
+                        assert error["code"] == "SERVER_BUSY"
+                        assert error["retryable"] is True
+                        assert entered == active == peak == 40
+                finally:
+                    release.set()
+            assert active == 0
+            assert not (await client.call_tool("get_devices", {})).is_error
+            assert peak == 40
+
+    anyio.run(check)
+
+
 def test_path(tmp_path):
     with pytest.raises(ConnectorError):
         path("../escape", tmp_path)
@@ -229,5 +288,72 @@ def test_stdio_discovery(tmp_path):
             assert any(t.name == "submit_compile_job" for t in tools.tools)
             result = await client.call_tool("create_project", {"name": "x"})
             assert result.is_error
+
+    anyio.run(check)
+
+
+def test_cancelled_work_is_bounded_and_capacity_recovers(monkeypatch):
+    from qualcomm_ai_hub_mcp.adapter import Adapter
+
+    release = threading.Event()
+    lock = threading.Lock()
+    active = {"work": 0, "status": 0}
+    peak = {"work": 0, "status": 0}
+    busy = []
+
+    def invoke(self, op, arguments):
+        kind = "status" if op.name == "job_get_status" else "work"
+        with lock:
+            active[kind] += 1
+            peak[kind] = max(peak[kind], active[kind])
+        try:
+            assert release.wait(10)
+            if arguments.get("name") == "fail":
+                raise ValueError("failure")
+            return []
+        finally:
+            with lock:
+                active[kind] -= 1
+
+    monkeypatch.setattr(Adapter, "invoke", invoke)
+
+    async def check():
+        async with Client(create_server(sdk=SDK())) as client:
+
+            async def call(tool, arguments):
+                with anyio.move_on_after(0.3):
+                    result = await client.call_tool(tool, arguments)
+                    if result.is_error:
+                        busy.append(result.structured_content["error"])
+
+            try:
+                for _ in range(3):
+                    async with anyio.create_task_group() as tasks:
+                        for _ in range(30):
+                            tasks.start_soon(call, "get_devices", {})
+                assert active["work"] == peak["work"] == 39
+                assert busy and all(
+                    e["code"] == "SERVER_BUSY" and e["retryable"] for e in busy
+                )
+                await call("job_get_status", {"job_id": "j"})
+                assert active["status"] == peak["status"] == 1
+                await call("job_get_status", {"job_id": "j"})
+                assert active["status"] == 1
+                assert busy[-1]["code"] == "SERVER_BUSY"
+                result = await client.call_tool(
+                    "create_project", {"name": "x", "confirm": True}
+                )
+                assert result.structured_content["error"]["code"] == "SERVER_BUSY"
+                assert result.structured_content["error"]["retryable"]
+            finally:
+                release.set()
+            with anyio.fail_after(5):
+                while any(active.values()):
+                    await anyio.sleep(0.01)
+            for _ in range(40):
+                result = await client.call_tool("get_devices", {"name": "fail"})
+                assert result.is_error
+                assert result.structured_content["error"]["code"] != "SERVER_BUSY"
+            assert not (await client.call_tool("get_devices", {})).is_error
 
     anyio.run(check)

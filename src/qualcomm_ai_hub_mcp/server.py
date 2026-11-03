@@ -2,6 +2,7 @@
 
 import argparse
 import inspect
+import threading
 from pathlib import Path
 
 import anyio
@@ -20,6 +21,10 @@ def create_server(workspace=None, profile=None, sdk=None):
     if not root.is_dir():
         raise ValueError("Workspace must be an existing directory")
     adapter = Adapter(root, profile, sdk)
+    work_slots = threading.BoundedSemaphore(39)
+    status_slots = threading.BoundedSemaphore(1)
+    # Leave one dispatcher slot available to reject calls when all SDK slots are full.
+    dispatch_limiter = anyio.CapacityLimiter(41)
     server = MCPServer(
         "Qualcomm AI Hub",
         version=__version__,
@@ -35,11 +40,24 @@ def create_server(workspace=None, profile=None, sdk=None):
                         "Explicit confirm=true is required before this operation.",
                     )
                 )
+
+            def call_sdk():
+                slots = status_slots if op.name == "job_get_status" else work_slots
+                if not slots.acquire(blocking=False):
+                    raise ConnectorError(
+                        "SERVER_BUSY", "SDK capacity is full; retry later.", True
+                    )
+                try:
+                    return adapter.invoke(op, arguments)
+                finally:
+                    slots.release()
+
             try:
-                # Abandoning frees the worker slot, so cancelled waits cannot block polling.
+                # Worker-owned slots survive cancellation until SDK work finishes.
                 result = await anyio.to_thread.run_sync(
-                    lambda: adapter.invoke(op, arguments),
+                    call_sdk,
                     abandon_on_cancel=True,
+                    limiter=dispatch_limiter,
                 )
                 return {"result": result}
             except Exception as exc:  # noqa: BLE001 - tool boundary; classify() sanitizes

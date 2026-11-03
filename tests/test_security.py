@@ -192,11 +192,11 @@ def downloads(monkeypatch, tmp_path):
     sdk.config = hub.ClientConfig("test-token")
     instance = Downloads(tmp_path, sdk)
 
-    def transfer(url, filename, destination, verbose):
+    def transfer(url, destination):
         Path(destination).write_bytes(b"artifact")
         return str(destination)
 
-    monkeypatch.setattr(module.api_utils, "download_file", transfer)
+    monkeypatch.setattr(module, "_download_url", transfer)
     monkeypatch.setattr(
         module.api,
         "get_model_download_url",
@@ -249,7 +249,7 @@ def test_remote_traversal_rejected_before_transfer(downloads, monkeypatch, tmp_p
     from qualcomm_ai_hub_mcp import downloads as module
 
     transfer = MagicMock()
-    monkeypatch.setattr(module.api_utils, "download_file", transfer)
+    monkeypatch.setattr(module, "_download_url", transfer)
     monkeypatch.setattr(
         module.api,
         "get_model_download_url",
@@ -341,10 +341,10 @@ def test_failed_transfer_does_not_publish(downloads, monkeypatch, tmp_path):
     from qualcomm_ai_hub_mcp import downloads as module
 
     def fail(*args):
-        Path(args[2]).write_bytes(b"partial")
+        Path(args[1]).write_bytes(b"partial")
         raise TimeoutError("signed-secret-url")
 
-    monkeypatch.setattr(module.api_utils, "download_file", fail)
+    monkeypatch.setattr(module, "_download_url", fail)
     target = MagicMock(spec=hub.Model)
     target.model_id = "m"
     with pytest.raises(TimeoutError):
@@ -390,12 +390,12 @@ def test_remote_hdf5_download_and_output_data(downloads, monkeypatch, tmp_path):
         ),
     )
 
-    def transfer(url, filename, destination, verbose):
+    def transfer(url, destination):
         with h5py.File(destination, "w") as data:
             dataset_entries_to_h5({"x": [np.array([1, 2], dtype=np.int64)]}, data)
         return str(destination)
 
-    monkeypatch.setattr(module.api_utils, "download_file", transfer)
+    monkeypatch.setattr(module, "_download_url", transfer)
     dataset = hub.Dataset(downloads.client, "d", datetime.now(), None, "remote", False)
     target = MagicMock(spec=hub.InferenceJob)
     target.get_output_dataset.return_value = dataset
@@ -424,7 +424,7 @@ def test_duplicate_artifacts_rejected_before_any_transfer(
         lambda *a: SimpleNamespace(artifacts=[item, item]),
     )
     transfer = MagicMock()
-    monkeypatch.setattr(module.api_utils, "download_file", transfer)
+    monkeypatch.setattr(module, "_download_url", transfer)
     target = MagicMock(spec=hub.Job)
     target.job_id = "j"
     target.get_available_artifacts.return_value = [hub.JobArtifactType.DEVICE_LOG]
@@ -482,3 +482,80 @@ def test_corrupt_inputs_report_invalid_input(tmp_path):
         with pytest.raises(ConnectorError) as error:
             check(str(target))
         assert error.value.code == "INVALID_INPUT"
+
+
+@pytest.mark.parametrize("status", [200, 301, 302, 303, 307, 308, 403])
+def test_signed_url_transfer_policy(monkeypatch, tmp_path, status):
+    import requests
+
+    from qualcomm_ai_hub_mcp import downloads as module
+
+    calls = []
+
+    class Transport(requests.adapters.BaseAdapter):
+        def send(self, request, **kwargs):
+            calls.append(request.url)
+            response = requests.Response()
+            response.request, response.url = request, request.url
+            response.status_code = status
+            response.headers["Location"] = "http://127.0.0.1/private"
+            response._content, response._content_consumed = b"artifact", True
+            return response
+
+        def close(self):
+            pass
+
+    session = requests.Session()
+    session.trust_env = False
+    session.mount("https://", Transport())
+    session.mount("http://", Transport())
+    monkeypatch.setattr(
+        module.api_utils, "create_external_session", lambda **kw: session
+    )
+    destination = tmp_path / "out.bin"
+    if status == 200:
+        assert (
+            module._download_url("https://example.invalid/signed", destination)
+            == destination
+        )
+        assert destination.read_bytes() == b"artifact"
+    else:
+        with pytest.raises(ConnectorError if status < 400 else APIException) as error:
+            module._download_url("https://example.invalid/signed", destination)
+        result = error_result(error.value).model_dump_json()
+        assert "UNSAFE_URL" in result if status < 400 else "PERMISSION_DENIED" in result
+        assert "signed" not in result
+        assert not destination.exists()
+    assert calls == ["https://example.invalid/signed"]
+
+
+def test_signed_url_retry_replaces_partial_data(monkeypatch, tmp_path):
+    import requests
+
+    from qualcomm_ai_hub_mcp import downloads as module
+
+    attempts = 0
+
+    def session_factory(**kwargs):
+        nonlocal attempts
+        attempts += 1
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.status_code = 200
+
+        def chunks(size):
+            yield b"partial" if attempts == 1 else b"complete"
+            if attempts == 1:
+                raise requests.exceptions.ChunkedEncodingError("signed-secret-url")
+
+        response.iter_content.side_effect = chunks
+        session = MagicMock()
+        session.__enter__.return_value = session
+        session.get.return_value = response
+        return session
+
+    monkeypatch.setattr(module.api_utils, "create_external_session", session_factory)
+    destination = tmp_path / "out.bin"
+    module._download_url("https://example.invalid/signed", destination)
+    assert attempts == 2
+    assert destination.read_bytes() == b"complete"

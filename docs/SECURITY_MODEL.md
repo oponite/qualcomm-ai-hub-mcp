@@ -11,6 +11,12 @@ boolean `confirm=true`. A missing or false value is rejected before any SDK acce
 The server cannot tell who set that value, so a model can set it. Your MCP client must
 obtain human approval. No operation-wide permissions are silently enabled.
 
+## Capacity
+
+Each server limits unfinished SDK tool executions to 39 ordinary calls and one
+reserved status check. Cancellation does not release capacity until the SDK work
+finishes. Excess calls return a retryable `SERVER_BUSY` error before SDK access.
+
 ## Credentials
 
 Keep tokens in the SDK configuration or the client's environment, never in tool
@@ -45,6 +51,7 @@ Downloads go through per-call temporary staging and exclusive output creation:
 - Existing files and folders are never overwritten, including when the SDK adds an
   extension.
 - Server-provided filenames are checked before transfer.
+- Signed-URL downloads require HTTPS without embedded credentials and reject redirects.
 - Archives stay zipped, and Python model objects are not deserialized.
 - Result bundles use fixed `logs`, `model`, `dataset`, and `profile.json` locations.
 - When an optional target-model filename is omitted, the file is saved under
